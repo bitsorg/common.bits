@@ -112,7 +112,7 @@ popd
 env PATH="$INSTALLROOT/bin:$PATH" \
     LD_LIBRARY_PATH="$INSTALLROOT/lib:$LD_LIBRARY_PATH" \
     PYTHONHOME="$INSTALLROOT" \
-    python3 -m pip install 'certifi==2022.12.7'
+    python3 -m pip install 'certifi>=2022.12.7'
 
 # Uniform Python library path
 pushd "$INSTALLROOT/lib"
