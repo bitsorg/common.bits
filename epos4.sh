@@ -1,12 +1,14 @@
 package: EPOS4
 version: "%(tag_basename)s"
-tag: "v4.0.3-alice1"
+tag: "v4.0.3-alice3"
 source: https://github.com/alisw/EPOS4.git
 requires:
   - ROOT
   - fastjet
   - HepMC3
   - alibuild-recipe-tools
+env:
+  EPO4VSN: "4.0.3"
 ---
 #!/bin/bash -ex
 

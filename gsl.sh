@@ -27,5 +27,6 @@ MODULEDIR="$INSTALLROOT/etc/modulefiles"
 MODULEFILE="$MODULEDIR/$PKGNAME"
 mkdir -p "$MODULEDIR"
 alibuild-generate-module --bin --lib > $MODULEFILE
-echo  "setenv GSL_ROOT \$::env(BASEDIR)/$PKGNAME/\$version" >> $MODULEFILE
-
+cat >> "$MODULEFILE" <<EoF
+prepend-path ROOT_INCLUDE_PATH \$PKG_ROOT/include
+EoF

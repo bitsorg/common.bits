@@ -79,6 +79,11 @@ b2 -q                                                 \
    --prefix="$INSTALLROOT"                            \
    --build-dir=build-boost                            \
    --disable-icu                                      \
+   --without-context                                  \
+   --without-coroutine                                \
+   --without-graph                                    \
+   --without-graph_parallel                           \
+   --without-locale                                   \
    --without-mpi                                      \
    ${BOOST_NO_PYTHON:+--without-python}               \
    --debug-configuration                              \

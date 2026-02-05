@@ -12,12 +12,12 @@ requires:
   - xsimd
 build_requires:
   - zlib
-  - abseil
   - flatbuffers
   - RapidJSON
   - CMake
   - double-conversion
   - re2
+  - abseil
   - alibuild-recipe-tools
   - ninja
   - Python
@@ -124,7 +124,8 @@ cmake ./src_tmp/cpp                                                             
       -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON                                                        \
       ${GCC_TOOLCHAIN_REVISION:+-DGCC_TOOLCHAIN_ROOT="$(find "$GCC_TOOLCHAIN_ROOT/lib" -name crtbegin.o -exec dirname {} \;)"} \
       -DCLANG_EXECUTABLE="$CLANG_EXECUTABLE" \
-      -DCMAKE_PREFIX_PATH="${XSIMD_ROOT};${ABSEIL_ROOT};"
+      -DCMAKE_PREFIX_PATH="$XSIMD_ROOT;$ABSEIL_ROOT"
+
 
 cmake --build . -- ${JOBS:+-j $JOBS} install
 find "$INSTALLROOT/share" -name '*-gdb.py' -exec mv {} "$INSTALLROOT/lib" \;

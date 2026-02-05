@@ -16,7 +16,7 @@ build_requires:
 # First, build fftw3 (double precision), required by ROOT.
 cmake -S "$SOURCEDIR" -B "$BUILDDIR/fftw3"              \
       -DCMAKE_INSTALL_PREFIX:PATH="$INSTALLROOT"        \
-      -DCMAKE_INSTALL_LIBDIR:PATH=lib 
+      -DCMAKE_INSTALL_LIBDIR:PATH=lib
 make -C "$BUILDDIR/fftw3" ${JOBS+-j "$JOBS"}
 make -C "$BUILDDIR/fftw3" install
 

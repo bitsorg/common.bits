@@ -5,6 +5,7 @@ source: https://github.com/xrootd/xrootd
 requires:
   - "OpenSSL:(?!osx)"
   - Python-modules
+  - AliEn-Runtime
   - libxml2
   - zlib
 build_requires:
@@ -84,7 +85,7 @@ cmake "${SOURCEDIR}"                                                  \
       -DENABLE_VOMS=OFF                                               \
       -DENABLE_XRDCLHTTP=OFF                                          \
       -DENABLE_READLINE=OFF                                           \
-      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}                          \
+      -DCMAKE_BUILD_TYPE=RelWithDebInfo                               \
       ${OPENSSL_ROOT:+-DOPENSSL_ROOT_DIR=$OPENSSL_ROOT}               \
       ${OPENSSL_ROOT:+-DOPENSSL_INCLUDE_DIRS=$OPENSSL_ROOT/include}   \
       ${OPENSSL_ROOT:+-DOPENSSL_LIBRARIES=$OPENSSL_ROOT/lib/libssl.$SONAME;$OPENSSL_ROOT/lib/libcrypto.$SONAME} \

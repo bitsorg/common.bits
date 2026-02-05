@@ -1,7 +1,7 @@
 package: CLHEP
-version: "2.4.0.1"
-tag: CLHEP_2_4_0_1
-source: https://gitlab.cern.ch/CLHEP/CLHEP
+version: "2.2.0.8"
+tag: CLHEP_2_2_0_8
+source: https://github.com/alisw/clhep
 build_requires:
   - CMake
 ---

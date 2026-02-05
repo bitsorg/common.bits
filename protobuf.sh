@@ -12,21 +12,23 @@ prepend_path:
   # The protobuf headers must match the protoc binary version, so prevent the
   # use of system headers by putting ours first in the path.
   PKG_CONFIG_PATH: "$PROTOBUF_ROOT/lib/pkgconfig"
+  CMAKE_PREFIX_PATH: "$PROTOBUF_ROOT/lib/cmake"
 ---
 #!/bin/bash -e
 if [ -f $SOURCEDIR/cmake/CMakeLists.txt ]; then
-  ALIBUILD_CMAKE_SOURCE_DIR=$SOURCEDIR/cmake
+  CMAKE_SOURCE_DIR=$SOURCEDIR/cmake
 else
-  ALIBUILD_CMAKE_SOURCE_DIR=$SOURCEDIR
+  CMAKE_SOURCE_DIR=$SOURCEDIR
 fi
-cmake -S "$ALIBUILD_CMAKE_SOURCE_DIR"      \
-    -DCMAKE_INSTALL_PREFIX="$INSTALLROOT"  \
-    -Dprotobuf_BUILD_TESTS=NO              \
-    -Dprotobuf_MODULE_COMPATIBLE=YES       \
-    -Dprotobuf_BUILD_SHARED_LIBS=NO        \
-    -Dprotobuf_ABSL_PROVIDER=package       \
-    -DCMAKE_INSTALL_LIBDIR=lib             \
-    -DCMAKE_PREFIX_PATH="$ABSEIL_ROOT;" # "$XSIMD_ROOT;$ABSEIL_ROOT;"
+cmake -S "$CMAKE_SOURCE_DIR"              \
+    -DCMAKE_INSTALL_PREFIX="$INSTALLROOT" \
+    -Dprotobuf_BUILD_TESTS=NO             \
+    -Dprotobuf_MODULE_COMPATIBLE=YES      \
+    -Dprotobuf_BUILD_SHARED_LIBS=OFF      \
+    -Dprotobuf_ABSL_PROVIDER=package      \
+    -DCMAKE_INSTALL_LIBDIR=lib            \
+    -DCMAKE_PREFIX_PATH="$ABSEIL_ROOT"
+
 
 cmake --build . -- ${JOBS:+-j$JOBS} install
 sed -i.bak 's|absl/log/absl_log.h|absl/log/vlog_is_on.h|' $INSTALLROOT/include/google/protobuf/io/coded_stream.h

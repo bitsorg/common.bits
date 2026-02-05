@@ -1,6 +1,6 @@
 package: ThePEG
 version: "%(tag_basename)s"
-tag: "v2.2.2-alice2"
+tag: "v2.3.0-alice2"
 source: https://github.com/alisw/thepeg
 requires:
   - Rivet
@@ -42,9 +42,9 @@ fi
 rsync -a --delete --exclude '**/.git' --delete-excluded $SOURCEDIR/ ./
 
 # Override perl from AliEn-Runtime
-#mkdir -p fakeperl/bin
-#ln -nfs /usr/bin/perl fakeperl/bin/perl
-#export PATH="$PWD/fakeperl/bin:$PATH"
+mkdir -p fakeperl/bin
+ln -nfs /usr/bin/perl fakeperl/bin/perl
+export PATH="$PWD/fakeperl/bin:$PATH"
 
 # special treatment for ThePEG version used for DIPSY
 if [[ "$PKGVERSION" =~ "v2015-08-11" ]]; then
@@ -94,4 +94,5 @@ setenv THEPEG_ROOT \$THEPEG_ROOT
 setenv ThePEG_INSTALL_PATH \$::env(THEPEG_ROOT)/lib/ThePEG
 prepend-path PATH \$THEPEG_ROOT/bin
 prepend-path LD_LIBRARY_PATH \$THEPEG_ROOT/lib/ThePEG
+prepend-path ROOT_INCLUDE_PATH \$THEPEG_ROOT/include
 EoF
