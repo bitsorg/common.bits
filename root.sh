@@ -1,10 +1,10 @@
 package: ROOT
 version: "%(tag_basename)s"
-tag: "v6-36-04-alice3"
-source: https://github.com/alisw/root.git
+tag: "v6-36-04"
+source: https://github.com/root-project/root.git
 requires:
+  - abseil
   - arrow
-  - AliEn-Runtime:(?!.*ppc64)
   - GSL
   - opengl:(?!osx)
   - Xdevel:(?!osx)
@@ -23,7 +23,6 @@ requires:
   - Vc
   - pythia
   - nlohmann_json
-  - abseil
 build_requires:
   - CMake
   - "Xcode:(osx.*)"
@@ -37,9 +36,6 @@ prepend_path:
 incremental_recipe: |
   # Limit parallel builds to prevent OOM
   cmake --build . --target install ${JOBS+-j $JOBS}
-  rm -vf "$INSTALLROOT/etc/plugins/TGrid/P010_TAlien.C"         \
-         "$INSTALLROOT/etc/plugins/TSystem/P030_TAlienSystem.C" \
-         "$INSTALLROOT/etc/plugins/TFile/P070_TAlienFile.C"
   # Add support for ROOT_PLUGIN_PATH envvar for specifying additional plugin search paths
   grep -v '^Unix.*.Root.PluginPath' "$INSTALLROOT/etc/system.rootrc" > system.rootrc.0
   cat >> system.rootrc.0 <<\EOF
@@ -63,12 +59,9 @@ COMPILER_CC=cc
 COMPILER_CXX=c++
 COMPILER_LD=c++
 [[ "$CXXFLAGS" == *'-std=c++11'* ]] && CMAKE_CXX_STANDARD=11 || true
-case $CXXFLAGS in
-  *-std=c++14*) CMAKE_CXX_STANDARD=14 ;;
-  *-std=c++17*) CMAKE_CXX_STANDARD=17 ;;
-  *-std=c++20*) CMAKE_CXX_STANDARD=20 ;;
-  *-std=c++23*) CMAKE_CXX_STANDARD=23 ;;
-esac
+[[ "$CXXFLAGS" == *'-std=c++14'* ]] && CMAKE_CXX_STANDARD=14 || true
+[[ "$CXXFLAGS" == *'-std=c++17'* ]] && CMAKE_CXX_STANDARD=17 || true
+[[ "$CXXFLAGS" == *'-std=c++20'* ]] && CMAKE_CXX_STANDARD=20 || true
 
 # We do not use global options for ROOT, otherwise the -g will
 # kill compilation on < 8GB machines
@@ -92,12 +85,6 @@ case $ARCHITECTURE in
   ;;
 esac
 
-if [[ $ALIEN_RUNTIME_VERSION ]]; then
-  # AliEn-Runtime: we take OpenSSL and libxml2 from there, in case they
-  # were not taken from the system
-  OPENSSL_ROOT=${OPENSSL_ROOT:+$ALIEN_RUNTIME_ROOT}
-  LIBXML2_ROOT=${LIBXML2_REVISION:+$ALIEN_RUNTIME_ROOT}
-fi
 [[ $SYS_OPENSSL_ROOT ]] && OPENSSL_ROOT=$SYS_OPENSSL_ROOT
 
 # ROOT 6+: enable Python
@@ -131,7 +118,6 @@ fi
 case $PKG_VERSION in
   v6[-.]30*) EXTRA_CMAKE_OPTIONS="-Dminuit2=ON -Dpythia6=ON -Dpythia6_nolink=ON" ;;
   v6[-.]32[-.]0[6789]*) EXTRA_CMAKE_OPTIONS="-Dminuit=ON -Dpythia6=ON -Dpythia6_nolink=ON -Dproof=ON" ;;
-  v6[-.]36[-.][0-9]*) EXTRA_CMAKE_OPTIONS="-Dminuit=ON -Dpythia6=ON -Dpythia6_nolink=ON -Dproof=ON -Dgeombuilder=ON" ;;
   *) EXTRA_CMAKE_OPTIONS="-Dminuit=ON" ;;
 esac
 
@@ -144,6 +130,7 @@ cmake $SOURCEDIR                                                                
       -DCMAKE_INSTALL_PREFIX=$INSTALLROOT                                              \
       -Dalien=OFF                                                                      \
       ${CMAKE_CXX_STANDARD:+-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}}                \
+      -DCMAKE_CXX_FLAGS=" -fpermissive "                                               \
       -Dfreetype=ON                                                                    \
       -Dbuiltin_freetype=OFF                                                           \
       -Dpcre=OFF                                                                       \
@@ -196,7 +183,7 @@ cmake $SOURCEDIR                                                                
       ${DISABLE_MYSQL:+-Dmysql=OFF}                                                    \
       ${ROOT_HAS_PYTHON:+-DPYTHON_PREFER_VERSION=3}                                    \
       ${PYTHON_EXECUTABLE:+-DPYTHON_EXECUTABLE="${PYTHON_EXECUTABLE}"}                 \
--DCMAKE_PREFIX_PATH="$FREETYPE_ROOT;$SYS_OPENSSL_ROOT;$GSL_ROOT;$ALIEN_RUNTIME_ROOT;$PYTHON_ROOT;$PYTHON_MODULES_ROOT;$LIBPNG_ROOT;$LZMA_ROOT;$PROTOBUF_ROOT;$FFTW3_ROOT;$ABSEIL_ROOT"
+-DCMAKE_PREFIX_PATH="$FREETYPE_ROOT;$SYS_OPENSSL_ROOT;$GSL_ROOT;$PYTHON_ROOT;$PYTHON_MODULES_ROOT;$LIBPNG_ROOT;$LZMA_ROOT;$PROTOBUF_ROOT;$FFTW3_ROOT;$XSIMD_ROOT;$ABSEIL_ROOT;"
 
 # Workaround issue with cmake 3.29.0
 sed -i.removeme '/deps = gcc/d' build.ninja
@@ -217,18 +204,10 @@ Unix.*.Root.DynamicPath: .:$(ROOT_DYN_PATH):
 EOF
 mv system.rootrc.0 $INSTALLROOT/etc/system.rootrc
 
-if [[ $ALIEN_RUNTIME_VERSION ]]; then
-  # Get them from AliEn-Runtime in the Modulefile
-  unset OPENSSL_VERSION LIBXML2_VERSION OPENSSL_REVISION LIBXML2_REVISION
-fi
-
 # Make some CMake files used by other projects relocatable
 sed -i.deleteme -e "s!$BUILDDIR!$INSTALLROOT!g" $(find "$INSTALLROOT" -name '*.cmake') || true
 
-rm -vf "$INSTALLROOT/etc/plugins/TGrid/P010_TAlien.C"         \
-       "$INSTALLROOT/etc/plugins/TSystem/P030_TAlienSystem.C" \
-       "$INSTALLROOT/etc/plugins/TFile/P070_TAlienFile.C"     \
-       "$INSTALLROOT/LICENSE"
+rm -vf "$INSTALLROOT/LICENSE"
 
 # Make sure all the tools use the correct python
 for binfile in "$INSTALLROOT"/bin/*; do
