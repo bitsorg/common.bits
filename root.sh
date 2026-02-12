@@ -62,6 +62,7 @@ COMPILER_LD=c++
 [[ "$CXXFLAGS" == *'-std=c++14'* ]] && CMAKE_CXX_STANDARD=14 || true
 [[ "$CXXFLAGS" == *'-std=c++17'* ]] && CMAKE_CXX_STANDARD=17 || true
 [[ "$CXXFLAGS" == *'-std=c++20'* ]] && CMAKE_CXX_STANDARD=20 || true
+[[ "$CXXFLAGS" == *'-std=c++23'* ]] && CMAKE_CXX_STANDARD=23 || true
 
 # We do not use global options for ROOT, otherwise the -g will
 # kill compilation on < 8GB machines
@@ -136,6 +137,7 @@ cmake $SOURCEDIR                                                                
       -Dpcre=OFF                                                                       \
       -Dbuiltin_pcre=ON                                                                \
       -Dsqlite=OFF                                                                     \
+      -DCMAKE_IGNORE_PATH=/opt/homebrew/include                                        \
       $ROOT_XROOTD_FLAGS                                                               \
       $ROOT_PYTHON_FLAGS                                                               \
       ${ARROW_ROOT:+-Darrow=ON}                                                        \

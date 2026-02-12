@@ -1,8 +1,10 @@
 package: Python
 version: "%(tag_basename)s"
-tag: v3.9.16
+tag: v3.10.19
 source: https://github.com/python/cpython
+license: PSF License Version 2
 requires:
+  - AliEn-Runtime:(?!.*ppc64)
   - FreeType
   - libpng
   - sqlite
@@ -25,20 +27,20 @@ prefer_system_check: |
             python3 -c 'from sys import version_info; print(f"alibuild_system_replace: python{version_info.major}.{version_info.minor}")'
         ;;
     esac
-    python3 -c 'import sys; import sqlite3; sys.exit(1 if sys.version_info < (3, 9) or sys.version_info > (3, 14) else 0)' && python3 -m pip --help > /dev/null && printf '#include "pyconfig.h"' | cc -c $(python3-config --includes) -xc -o /dev/null -; if [ $? -ne 0 ]; then printf "Python, the Python development packages, and pip must be installed on your system.\nUsually those packages are called python, python-devel (or python-dev) and python-pip.\n"; exit 1; fi
+    python3 -c 'import sys; import sqlite3; sys.exit(1 if sys.version_info < (3, 9) or sys.version_info > (3, 15) else 0)' && python3 -m pip --help > /dev/null && printf '#include "pyconfig.h"' | cc -c $(python3-config --includes) -xc -o /dev/null -; if [ $? -ne 0 ]; then printf "Python, the Python development packages, and pip must be installed on your system.\nUsually those packages are called python, python-devel (or python-dev) and python-pip.\n"; exit 1; fi
 prefer_system_replacement_specs:
   "python-brew3.*":
     version: "%(key)s"
     env:
-        PYTHON_ROOT: $(brew --prefix python3)
-        PYTHON_REVISION: ""
+      PYTHON_ROOT: $(python3 -c 'import sysconfig; print(sysconfig.get_config_var("exec_prefix"))')
+      PYTHON_REVISION: ""
   "python3.*":
     version: "%(key)s"
     env:
-        # Python is in path, so we need a dummy placeholder for PYTHON_ROOT
-        # to avoid having /bin in the middle of the path.
-        PYTHON_ROOT: "/dummy-python-folder"
-        PYTHON_REVISION: ""
+      # Python is in path, so we need a dummy placeholder for PYTHON_ROOT
+      # to avoid having /bin in the middle of the path.
+      PYTHON_ROOT: "/dummy-python-folder"
+      PYTHON_REVISION: ""
 ---
 rsync -av --exclude '**/.git' $SOURCEDIR/ $BUILDDIR/
 
@@ -54,13 +56,18 @@ unset PYTHONPATH
 # The only way to pass externals to Python
 LDFLAGS=
 CPPFLAGS=
-for ext in $ZLIB_ROOT $FREETYPE_ROOT $LIBPNG_ROOT $SQLITE_ROOT $LIBFFI_ROOT; do
+for ext in $ALIEN_RUNTIME_ROOT $ZLIB_ROOT $FREETYPE_ROOT $LIBPNG_ROOT $SQLITE_ROOT $LIBFFI_ROOT; do
   LDFLAGS="$(find $ext -type d \( -name lib -o -name lib64 \) -exec echo -L\{\} \;) $LDFLAGS"
   CPPFLAGS="$(find $ext -type d -name include -exec echo -I\{\} \;) $CPPFLAGS"
 done
 export LDFLAGS=$(echo $LDFLAGS)
 export CPPFLAGS=$(echo $CPPFLAGS)
 
+# Check if OpenSSL and zlib are from AliEn
+if [[ $ALIEN_RUNTIME_VERSION ]]; then
+  OPENSSL_ROOT=${OPENSSL_ROOT:+$ALIEN_RUNTIME_ROOT}
+  ZLIB_ROOT=${ZLIB_ROOT:+$ALIEN_RUNTIME_ROOT}
+fi
 case $ARCHITECTURE in
   osx*) [[ ! $OPENSSL_ROOT ]] && OPENSSL_ROOT=$(brew --prefix openssl@3) ;;
 esac
@@ -100,6 +107,7 @@ pushd "$INSTALLROOT/bin"
   PYTHON_BIN=$(for X in python*; do echo "$X"; done | grep -E '^python[0-9]+\.[0-9]+$' | head -n1)
   PIP_BIN=$(for X in pip*; do echo "$X"; done | grep -E '^pip[0-9]+\.[0-9]+$' | head -n1)
   PYTHON_CONFIG_BIN=$(for X in python*-config; do echo "$X"; done | grep -E '^python[0-9]+\.[0-9]+m?-config$' | head -n1)
+  chmod +x $PYTHON_BIN $PIP_BIN $PYTHON_CONFIG_BIN
   [[ -x python ]] || ln -nfs "$PYTHON_BIN" python
   [[ -x python3 ]] || ln -nfs "$PYTHON_BIN" python3
   [[ -x pip ]] || ln -nfs "$PIP_BIN" pip
@@ -109,6 +117,10 @@ pushd "$INSTALLROOT/bin"
 popd
 
 # Install Python SSL certificates right away
+env PATH="$INSTALLROOT/bin:$PATH" \
+    LD_LIBRARY_PATH="$INSTALLROOT/lib:$LD_LIBRARY_PATH" \
+    PYTHONHOME="$INSTALLROOT" \
+    which python3
 env PATH="$INSTALLROOT/bin:$PATH" \
     LD_LIBRARY_PATH="$INSTALLROOT/lib:$LD_LIBRARY_PATH" \
     PYTHONHOME="$INSTALLROOT" \
@@ -124,6 +136,9 @@ rm -rvf "$INSTALLROOT"/share "$INSTALLROOT"/lib/python*/test
 find "$INSTALLROOT"/lib/python* \
      -mindepth 2 -maxdepth 2 -type d -and \( -name test -or -name tests \) \
      -exec rm -rvf '{}' \;
+
+# Get OpenSSL and zlib at runtime from AliEn-Runtime if appropriate
+[[ $ALIEN_RUNTIME_REVISION ]] && unset OPENSSL_REVISION ZLIB_REVISION
 
 # Modulefile
 MODULEDIR="$INSTALLROOT/etc/modulefiles"
