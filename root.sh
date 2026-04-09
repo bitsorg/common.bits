@@ -2,6 +2,8 @@ package: ROOT
 version: "%(tag_basename)s"
 tag: "v6-36-04"
 source: https://github.com/root-project/root.git
+mem_per_job: 1500
+mem_utilisation: 0.80
 requires:
   - abseil
   - arrow
