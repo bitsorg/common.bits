@@ -2,7 +2,7 @@ package: Clang
 version: "v20.1.7"
 tag: "llvmorg-20.1.7-alice2"
 source: https://github.com/alisw/llvm-project-reduced
-mem_per_job: 2048
+mem_per_job: 1280
 requires:
   - "GCC-Toolchain:(?!osx)"
 build_requires:
